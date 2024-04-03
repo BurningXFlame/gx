@@ -22,7 +22,9 @@ type Server struct {
 	Log  log.TagLogger
 }
 
-// Start a TCP server for readiness check (aka, health check). Only for connectivity check. For security purpose, no sending data nor receiving data.
+// Start a TCP server for readiness check (aka, health check).
+// Only for connectivity check.
+// For security purpose, no sending data nor receiving data.
 func (s *Server) Serve(ctx context.Context) error {
 	if len(s.Tag) == 0 {
 		s.Tag = "readiness"

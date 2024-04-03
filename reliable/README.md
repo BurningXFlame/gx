@@ -1,6 +1,6 @@
 # Reliable
 
-Provides process-level guardian, goroutine-level guardian, auto-reloader, backoff strategy, etc.
+Provides utilities to improve application reliability.
 
 - [Typical Use Case](#typical-use-case)
 - [Process-Level Guardian](#process-level-guardian)
@@ -8,6 +8,7 @@ Provides process-level guardian, goroutine-level guardian, auto-reloader, backof
 - [Auto-Reload on Config Changes](#auto-reload-on-config-changes)
 - [Backoff](#backoff)
 - [Readiness](#readiness)
+- [Timeout Decorator](#timeout-decorator)
 
 ## Typical Use Case
 
@@ -166,3 +167,31 @@ go guard.WithGuard(ctx, guard.Conf{
     AlsoRetryOnSuccess: true,
 })
 ```
+
+## Timeout Decorator
+
+A Timeout Decorator abandons the call to the wrapped function if the call does not finish in a specified duration.
+There're 4 variants, each for a type of functions. All functions can be classfied into these four.
+
+```go
+// Timeout Decorator for functions with input and output parameters, i.e func(I) (O, error)
+func WithTimeoutIO[I, O any](timeout time.Duration, fn func(I) (O, error)) func(I) (O, error)
+
+// Timeout Decorator for functions with input parameters only, i.e func(I) error
+func WithTimeoutI[I any](timeout time.Duration, fn func(I) error) func(I) error
+
+// Timeout Decorator for functions with output parameters only, i.e func() (O, error)
+func WithTimeoutO[O any](timeout time.Duration, fn func() (O, error)) func() (O, error)
+
+// Timeout Decorator for functions with neither input nor output parameters, i.e func() error
+func WithTimeout(timeout time.Duration, fn func() error) func() error
+```
+
+```go
+import	"github.com/burningxflame/gx/reliable/timeout"
+
+fn = timeout.WithTimeout(duration, fn)
+```
+
+**Samples**
+[timeout_decorator](timeout/timeout_test.go)
