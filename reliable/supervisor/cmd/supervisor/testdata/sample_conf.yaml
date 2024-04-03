@@ -1,0 +1,34 @@
+procs:
+  - tag: a # Tag of process. Used to tag log messages.
+    path: /bin/sh # Path of the command to run
+    args: # Args of the command
+      - -c
+      - date >> /tmp/xyz/a.txt
+    bf: # Backoff strategy determines how long to wait between retries.
+      max: 10 # Max delay. In seconds.
+      unit: 1 # Unit of increment. In seconds.
+      strategy: l # Strategy of increment. l - Linear, e - Exponent
+      # If a retry lasts longer than resetAfter, the next delay will be reset to min. In seconds.
+      resetAfter: 10
+  - tag: b
+    path: /bin/sh
+    args:
+      - -c
+      - date +%T >> /tmp/xyz/b.txt
+    bf:
+      max: 10
+      unit: 1
+      strategy: e
+      resetAfter: 10
+log:
+  filePath: /tmp/xyz/supervisor.log # Fullpath of log file
+  # Max size of a log file. If a file exceeds this size, the file will be rotated. In megabytes. Default to 10.
+  fileSize: 10
+  nBak: 2 # Max number of old log files. Older files will be removed.
+  perm: "600" # Permission of log file. Default to 600.
+  # If true, rotated log files will not be compressed. Otherwise, rotated log files will be compressed with gzip.
+  noCompress: false
+  # If ture, rotated log files will be renamed based on UTC time. Local time otherwise.
+  utc: false
+  bufSize: 1024 # Buffer Size in kilobytes. Default to 1024.
+  flushInterval: 5 # Auto-flush interval in seconds. Default to 5.
