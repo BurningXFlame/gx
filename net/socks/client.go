@@ -97,9 +97,17 @@ func recvResp(conn net.Conn, buf []byte) error {
 
 	rep := buf[1]
 	if rep != repOk {
-		return fmt.Errorf("rep code %v", rep)
+		return RepErr{rep}
 	}
 
 	// discard what's left
 	return discardAddr(conn, buf)
+}
+
+type RepErr struct {
+	Rep byte
+}
+
+func (e RepErr) Error() string {
+	return fmt.Sprintf("rep 0x%x", e.Rep)
 }

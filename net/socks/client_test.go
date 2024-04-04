@@ -9,6 +9,8 @@ Read the LICENSE file for details.
 package socks
 
 import (
+	"context"
+	"errors"
 	"io"
 	"net"
 	"strconv"
@@ -30,15 +32,20 @@ const (
 func TestClientHandShake(t *testing.T) {
 	as := require.New(t)
 
-	go socksServer(as)
-	go echoServer(as, destAddr)
-	go echoServer(as, destAddrV6)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go socksServer(ctx, as)
+	go server(ctx, as, destAddr)
+	go server(ctx, as, destAddrV6)
 	time.Sleep(time.Second / 10)
 
-	tcs := []string{
-		destAddr,
-		destAddrV6,
-		destAddrDomain,
+	tcs := []struct {
+		addr string
+	}{
+		{destAddr},
+		{destAddrV6},
+		{destAddrDomain},
 	}
 
 	for ti, tc := range tcs {
@@ -47,16 +54,15 @@ func TestClientHandShake(t *testing.T) {
 			as.Nil(err)
 			defer conn.Close()
 
-			err = ClientHandshake(conn, tc)
+			err = ClientHandshake(conn, tc.addr)
 			as.Nil(err)
 
-			err = comm(as, conn)
-			as.Nil(err)
+			comm(as, conn)
 		})
 	}
 }
 
-func socksServer(as *require.Assertions) {
+func socksServer(_ context.Context, as *require.Assertions) {
 	server, err := socks5.New(&socks5.Config{})
 	as.Nil(err)
 
@@ -64,12 +70,21 @@ func socksServer(as *require.Assertions) {
 	as.Nil(err)
 }
 
-func echoServer(as *require.Assertions, addr string) {
+func server(ctx context.Context, as *require.Assertions, addr string) {
 	ln, err := net.Listen("tcp", addr)
 	as.Nil(err)
+	defer ln.Close()
+
+	go func() {
+		<-ctx.Done()
+		ln.Close()
+	}()
 
 	for {
 		conn, err := ln.Accept()
+		if err != nil && errors.Is(err, net.ErrClosed) {
+			return
+		}
 		as.Nil(err)
 
 		go func() {
@@ -81,7 +96,7 @@ func echoServer(as *require.Assertions, addr string) {
 	}
 }
 
-func comm(as *require.Assertions, conn net.Conn) error {
+func comm(as *require.Assertions, conn net.Conn) {
 	for i := 0; i < 3; i++ {
 		msg := uuid.New()
 		buf := make([]byte, len(msg))
@@ -94,6 +109,4 @@ func comm(as *require.Assertions, conn net.Conn) error {
 
 		as.Equal(msg, string(buf))
 	}
-
-	return nil
 }

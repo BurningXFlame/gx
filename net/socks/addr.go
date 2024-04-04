@@ -33,6 +33,7 @@ const (
 var (
 	errDomainOversize = errors.New("domain name oversize")
 	errInvalidAddr    = errors.New("invalid address")
+	ErrInvalidAtyp    = errors.New("invalid atyp")
 )
 
 type addr struct {
@@ -88,7 +89,7 @@ func (a *addr) recv(conn net.Conn, buf []byte) error {
 	case atypDomain:
 		a.host = &domain{}
 	default:
-		return fmt.Errorf("invalid atyp %v", atyp)
+		return ErrInvalidAtyp
 	}
 
 	err = a.host.recv(conn, buf)
@@ -251,7 +252,7 @@ func discardAddr(conn net.Conn, buf []byte) error {
 		}
 		hostSize = int(buf[0])
 	default:
-		return fmt.Errorf("invalid atyp %v", atyp)
+		return ErrInvalidAtyp
 	}
 
 	_, err = io.ReadFull(conn, buf[:hostSize+portSize])
