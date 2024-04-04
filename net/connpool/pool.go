@@ -13,7 +13,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/burningxflame/gx/reliable/timeout"
+	"github.com/burningxflame/gx/reliable/timeouts"
 )
 
 type Conf struct {
@@ -41,8 +41,8 @@ func (c *Conf) adjust() error {
 	}
 
 	if c.Timeout > 0 {
-		c.New = timeout.WithTimeoutO(c.Timeout, c.New)
-		c.Ping = timeout.WithTimeoutI(c.Timeout, c.Ping)
+		c.New = timeouts.WithTimeoutO(c.Timeout, c.New)
+		c.Ping = timeouts.WithTimeoutI(c.Timeout, c.Ping)
 	}
 
 	return nil

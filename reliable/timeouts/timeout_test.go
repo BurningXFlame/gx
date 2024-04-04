@@ -6,7 +6,7 @@ Dual-licensed: AGPLv3/Commercial.
 Read the LICENSE file for details.
 */
 
-package timeout
+package timeouts
 
 import (
 	"strconv"

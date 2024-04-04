@@ -188,9 +188,9 @@ func WithTimeout(timeout time.Duration, fn func() error) func() error
 ```
 
 ```go
-import	"github.com/burningxflame/gx/reliable/timeout"
+import	"github.com/burningxflame/gx/reliable/timeouts"
 
-fn = timeout.WithTimeout(duration, fn)
+fn = timeouts.WithTimeout(timeout, fn)
 ```
 
 **Samples**

@@ -10,7 +10,7 @@ Read the LICENSE file for details.
 A Timeout Decorator abandons the call to the wrapped function if the call does not finish in a specified duration.
 There're 4 variants, each for a type of functions. All functions can be classfied into these four.
 */
-package timeout
+package timeouts
 
 import (
 	"errors"
