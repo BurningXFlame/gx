@@ -362,13 +362,7 @@ func client(addr string, tc clientOpt) error {
 		}
 
 		if tc.tlsConfig != nil {
-			tlsConn := tls.Client(conn, tc.tlsConfig)
-			// err := tlsConn.Handshake()
-			// if err != nil {
-			// 	return err
-			// }
-
-			conn = tlsConn
+			conn = tls.Client(conn, tc.tlsConfig)
 		}
 
 		err = comm(conn)

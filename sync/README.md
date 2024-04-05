@@ -1,4 +1,4 @@
-# sync
+# Sync
 
 - [Semaphore](#semaphore)
   - [Use](#use)
@@ -7,7 +7,7 @@
 
 ## Semaphore
 
-[Semaphore](sem/sem.go) is commonly used for limiting max concurrency, e.g. max concurrent connections.
+Semaphore is commonly used for limiting max concurrency, e.g. limiting max number of concurrent connections.
 
 ### Use
 
@@ -46,7 +46,7 @@ BenchmarkAcquireRelease-12     22697646         51.96 ns/op        0 B/op       
 
 ## Keyed-Semaphores
 
-Commonly used for limiting max concurrency per key, e.g. max concurrent connections per client.
+Commonly used for limiting max concurrency per key, e.g. limiting max number of concurrent connections per client.
 
 ```go
 import "github.com/burningxflame/gx/sync/sem"

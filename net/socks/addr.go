@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -36,14 +36,14 @@ var (
 	ErrInvalidAtyp    = errors.New("invalid atyp")
 )
 
-type addr struct {
+type Addr struct {
 	host host
 	port uint16
 }
 
-var addr0 addr
+var addr0 Addr
 
-func parseAddr(dest string) (addr, error) {
+func parseAddr(dest string) (Addr, error) {
 	hostStr, portStr, err := net.SplitHostPort(dest)
 	if err != nil {
 		return addr0, fmt.Errorf("invalid addr: %v", err)
@@ -59,13 +59,13 @@ func parseAddr(dest string) (addr, error) {
 		return addr0, fmt.Errorf("invalid port: %v", err)
 	}
 
-	return addr{
+	return Addr{
 		host: host,
 		port: uint16(port),
 	}, nil
 }
 
-func (a *addr) send(conn net.Conn, buf []byte) error {
+func (a *Addr) send(conn net.Conn, buf []byte) error {
 	err := a.host.send(conn, buf)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (a *addr) send(conn net.Conn, buf []byte) error {
 	return binary.Write(conn, binary.BigEndian, a.port)
 }
 
-func (a *addr) recv(conn net.Conn, buf []byte) error {
+func (a *Addr) Recv(conn net.Conn, buf []byte) error {
 	_, err := io.ReadFull(conn, buf[:1])
 	if err != nil {
 		return err
@@ -100,8 +100,12 @@ func (a *addr) recv(conn net.Conn, buf []byte) error {
 	return binary.Read(conn, binary.BigEndian, &a.port)
 }
 
+func (a *Addr) String() string {
+	return net.JoinHostPort(a.host.String(), strconv.Itoa(int(a.port)))
+}
+
 type host interface {
-	host()
+	String() string
 	send(net.Conn, []byte) error
 	recv(net.Conn, []byte) error
 }
@@ -143,7 +147,9 @@ func toIpv4(v net.IP) *ipv4 {
 	return &rs
 }
 
-func (*ipv4) host() {}
+func (a *ipv4) String() string {
+	return net.IP(a.v[:]).String()
+}
 
 func (a *ipv4) send(conn net.Conn, buf []byte) error {
 	buf[0] = atypIpv4
@@ -173,7 +179,9 @@ func toIpv6(v net.IP) *ipv6 {
 	return &rs
 }
 
-func (*ipv6) host() {}
+func (a *ipv6) String() string {
+	return net.IP(a.v[:]).String()
+}
 
 func (a *ipv6) send(conn net.Conn, buf []byte) error {
 	buf[0] = atypIpv6
@@ -200,7 +208,9 @@ func toDomain(s string) (*domain, error) {
 	return &domain{s}, nil
 }
 
-func (*domain) host() {}
+func (a *domain) String() string {
+	return a.v
+}
 
 func (a *domain) send(conn net.Conn, buf []byte) error {
 	size := len(a.v)

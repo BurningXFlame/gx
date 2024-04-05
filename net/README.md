@@ -1,11 +1,11 @@
-# net
+# Net
 
 - [Connection Pool](#connection-pool)
 - [SOCKS5](#socks5)
 
 ## Connection Pool
 
-[ConnPool](connpool/pool.go) is a concurrency-safe connection pool.
+ConnPool is a concurrency-safe connection pool.
 
 ```go
 import "github.com/burningxflame/gx/net/connpool"
@@ -40,7 +40,7 @@ pool.Close()
 
 ## SOCKS5
 
-[SOCKS](socks/client.go) is a client-side implementation of the SOCKS5 proxy protocol.
+SOCKS is a client-side implementation of the SOCKS5 proxy protocol.
 
 ```go
 import (

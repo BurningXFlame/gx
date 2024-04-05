@@ -1,23 +1,23 @@
 
 - [Generic Data Structures](#generic-data-structures)
-  - [Ring Buffer, Double Ended Queue](#ring-buffer-double-ended-queue)
+  - [Auto-scalable Ring Buffer, Double Ended Queue](#auto-scalable-ring-buffer-double-ended-queue)
   - [Queue](#queue)
   - [Stack](#stack)
   - [Heap](#heap)
   - [Set](#set)
   - [Benchmark](#benchmark)
 - [Generic Iterator with Lazy Evaluation](#generic-iterator-with-lazy-evaluation)
-  - [From X to Iterator](#from-x-to-iterator)
-  - [Iterator Transformation](#iterator-transformation)
+  - [From Other Types to Iterators](#from-other-types-to-iterators)
+  - [Iterator Transformations](#iterator-transformations)
   - [Pipelines of Iterators](#pipelines-of-iterators)
-  - [Drain Iterator](#drain-iterator)
-  - [From Iterator to Y](#from-iterator-to-y)
+  - [Drain Iterators](#drain-iterators)
+  - [From Iterators to Other Types](#from-iterators-to-other-types)
 
 ## Generic Data Structures
 
-### Ring Buffer, Double Ended Queue
+### Auto-scalable Ring Buffer, Double Ended Queue
 
-[Ringbuf](ringbuf/ringbuf.go) is auto-scalable ring buffer. Ringbuf also implements deque (Double Ended Queue).
+Ringbuf is auto-scalable ring buffer. Ringbuf also implements deque (Double Ended Queue).
 
 It's better to implement deque based on ringbuf instead of slice or list.
 
@@ -35,11 +35,11 @@ import "github.com/burningxflame/gx/ds/ringbuf"
 PushBack, PushFront, PeekBack, PeekFront, PopBack, PopFront, Len, Range
 
 **Sample**:
-[ringbuf_test](ringbuf/ringbuf_test.go)
+[ringbuf](ringbuf/ringbuf_test.go)
 
 ### Queue
 
-[Queue](queue/queue.go): FIFO, a subset of deque.
+Queue is FIFO, a subset of deque.
 
 **Import**
 
@@ -51,11 +51,11 @@ import "github.com/burningxflame/gx/ds/queue"
 Enq, Peek, Deq, Len, Range
 
 **Sample**:
-[queue_test](queue/queue_test.go)
+[queue](queue/queue_test.go)
 
 ### Stack
 
-[Stack](stack/stack.go): LIFO, another subset of deque.
+Stack is LIFO, another subset of deque.
 
 **Import**
 
@@ -67,11 +67,9 @@ import "github.com/burningxflame/gx/ds/stack"
 Push, Peek, Pop, Len, Range
 
 **Sample**:
-[stack_test](stack/stack_test.go)
+[stack](stack/stack_test.go)
 
 ### Heap
-
-[Heap](heap/heap.go)
 
 **Import**
 
@@ -83,11 +81,9 @@ import "github.com/burningxflame/gx/ds/heap"
 Push, Pop, Len, Range
 
 **Sample**:
-[heap_test](heap/heap_test.go)
+[heap](heap/heap_test.go)
 
 ### Set
-
-[Set](set/set.go)
 
 **Import**
 
@@ -99,13 +95,15 @@ import "github.com/burningxflame/gx/ds/set"
 Add, Delete, Len, Contain, Equal, Range, Union, Intersect, Diff
 
 **Sample**:
-[set_test](set/set_test.go)
+[set](set/set_test.go)
 
 ### Benchmark
 
+```txt
 goos: darwin
 goarch: amd64
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+```
 
 Note: In each of the following benchmark results, the second colume (N) represents collection size, i.e., the number of elements in a collection.
 
@@ -148,13 +146,13 @@ BenchmarkDelete-12    	16687696	        90.03 ns/op	       0 B/op	       0 alloc
 
 ## Generic Iterator with Lazy Evaluation
 
-In contrast to eager evaluation, where evaluation is performed immediately. An Iterator is lazily evaluated, i.e. not evaluated until it's necessary, e.g. when you drain an Iterator.
+In contrast to eager evaluation where evaluation is performed immediately, an Iterator is lazily evaluated, i.e. not evaluated until it's necessary, e.g. when you drain an Iterator.
 
 ```go
 import "github.com/burningxflame/gx/ds/iter"
 ```
 
-### From X to Iterator
+### From Other Types to Iterators
 
 **Create Iterators from Builtin Types**
 
@@ -210,7 +208,7 @@ it := iter.FromRanger(r)
 **Samples**
 [from_to](iter/from_to_test.go)
 
-### Iterator Transformation
+### Iterator Transformations
 
 A transformation method transforms an Iterator in place, and returns the Iterator itself. This approach reduces memory footprint, especially for long pipelines of Iterators. And it enables method chaining as well, for easily building pipelines of Iterators.
 
@@ -266,7 +264,7 @@ Pipelines of Iterators are lazily evaluated, i.e. not evaluated until it's neces
 **Samples**
 [pipeline](iter/transform_test.go)
 
-### Drain Iterator
+### Drain Iterators
 
 Draining an Iterator means completing iteration and producing a result or a side effect. This is the time when an Iterator is really evaluated. After draining, an Iterator is considered exhausted and it's pointless to use that Iterator again.
 
@@ -316,7 +314,7 @@ ok := it.Every(pred)
 **Samples**
 [drain](iter/drain_test.go)
 
-### From Iterator to Y
+### From Iterators to Other Types
 
 **Convert Iterators to Builtin Types**
 

@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -20,18 +20,23 @@ import (
 	"github.com/burningxflame/gx/log/log"
 )
 
-// HTTP server over UDS
+// HTTP Server over UDS
 type Server struct {
-	Std     http.Server // http.Server in std lib
-	Tag     string      // Used to tag log messages
-	UdsAddr string      // The UDS address to listen
-	Perm    fs.FileMode // File permission of the UdsAddr
+	// http.Server in std lib
+	Std http.Server
+	// The UDS address to listen
+	UdsAddr string
+	// File permission of the UdsAddr
+	Perm fs.FileMode
 	// If graceful shutdown takes longer than ShutdownTimeout, exit instantly.
 	ShutdownTimeout time.Duration
-	Log             log.TagLogger
+	// Used to tag log messages
+	Tag string
+	// A TagLogger used to log messages
+	Log log.TagLogger
 }
 
-// Start an HTTP server over UDS
+// Start the Server
 func (s *Server) Serve(ctx context.Context) error {
 	if s.Log == nil {
 		s.Log = log.WithTag("")
@@ -43,7 +48,6 @@ func (s *Server) Serve(ctx context.Context) error {
 
 	ln, err := net.Listen("unix", s.UdsAddr)
 	if err != nil {
-		log.Error("error listening: %v", err)
 		return err
 	}
 	defer ln.Close()

@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -15,16 +15,16 @@ import (
 )
 
 const (
-	ver uint8 = 5
+	ver byte = 5
 
-	authNone          uint8 = 0
-	authNotAcceptable uint8 = 0xff
+	authNone          byte = 0
+	authNotAcceptable byte = 0xff
 
-	cmdConnect uint8 = 1
+	cmdConnect byte = 1
 
-	rsv uint8 = 0
+	rsv byte = 0
 
-	repOk uint8 = 0
+	repOk byte = 0
 )
 
 // Client-side handshake of SOCKS5 proxy protocol.
@@ -78,7 +78,7 @@ func auth(conn net.Conn, buf []byte) error {
 	return nil
 }
 
-func sendAddr(conn net.Conn, buf []byte, dest addr) error {
+func sendAddr(conn net.Conn, buf []byte, dest Addr) error {
 	buf[0], buf[1], buf[2] = ver, cmdConnect, rsv
 	_, err := conn.Write(buf[:3])
 	if err != nil {

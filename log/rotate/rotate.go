@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -23,7 +23,8 @@ import (
 )
 
 type Conf struct {
-	FilePath string // Fullpath of log file
+	// Fullpath of log file
+	FilePath string
 	// Max byte size of a log file. If a file exceeds this size, the file will be rotated. Default to 10MB.
 	FileSize int64
 	// Max number of old log files. Older files will be removed.

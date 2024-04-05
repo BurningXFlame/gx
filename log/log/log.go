@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -64,7 +64,7 @@ func Set(logger Logger, level Level) error {
 		return errInvalidLevel
 	}
 
-	Close()
+	_ = Close()
 
 	theConf.Store(conf{
 		logger: logger,
@@ -124,9 +124,9 @@ type TagLogger interface {
 	WithTag(tag string) TagLogger
 }
 
-// Create a TagLogger, which prints [tag] before every log message.
+// Create a TagLogger, which prints "[tag]" before every log message.
 // Usually used for module-specific logging, request-specific logging, etc.
-// WithTag may be chained together. Say, WithTag("tag1").WithTag("tag2") will print [tag1] [tag2] before every log message.
+// WithTag may be chained together. e.g. WithTag("tag").WithTag("tag2") creates a TagLogger, which prints "[tag] [tag2]" before every log message.
 func WithTag(tag string) TagLogger {
 	if len(tag) == 0 {
 		return &tagLogger{}

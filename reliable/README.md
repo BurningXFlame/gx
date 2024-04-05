@@ -16,19 +16,19 @@ For example, you develop a TCP service, and deploy the service to K8S.
 
 **Case 1**: Container restarts because the service process exits abnormally.
 **Problem**: It usually takes seconds ~ dozens of seconds before the container is up again.
-**Better Solution**: Let the process-level guardian guard your service process. Even though your service process exits abnormally, the container keeps alive, because the guardian keeps alive. The guardian launches your service process instantly, and therefore decreases downtime to nearly 0.
+**Better Solution**: Let the process-level guardian guard your service process. Even though your service process exits abnormally, the container keeps alive, because the guardian keeps alive. The guardian launches your service process instantly, and therefore decreases downtime to 0.
 
 **Case 2**: Client connections are closed because server process exits.
 **Problem**: Clients have to re-connect the server.
-**Better Solution**: Let the goroutine-level guardian guard your service goroutine. Even though your service exits abnormally, the process keeps alive, because the guardian keeps alive. The guardian launches your service instantly, and therefore decreases downtime to nearly 0. Furthermore, all established connections remain intact.
+**Better Solution**: Let the goroutine-level guardian guard your service goroutine. Even though your service exits abnormally, the process keeps alive, because the guardian keeps alive. The guardian launches your service instantly, and therefore decreases downtime to 0. Furthermore, all established connections remain intact.
 
 **Case 3**: Auto-restart service on config change.
 **Problem**: Same as Case 1 and 2.
-**Better Solution**: Let the auto-reloader watch the config file, and reload your service on config changes. It avoids container restart and process restart, and therefore decreases downtime to nearly 0. Furthermore, all established connections remain intact.
+**Better Solution**: Let the auto-reloader watch the config file, and reload your service on config changes. It avoids container restart and process restart, and therefore decreases downtime to 0. Furthermore, all established connections remain intact.
 
 ## Process-Level Guardian
 
-[Supervisor](supervisor/cmd/supervisor/supervisor.go) starts and guards processes.
+Supervisor starts and guards processes.
 
 1. Install supervisor:
 
@@ -47,7 +47,7 @@ For example, you develop a TCP service, and deploy the service to K8S.
 
 ## Goroutine-Level Guardian
 
-[Guard](guard/guard.go) starts and guards a function.
+Guard starts and guards a function.
 
 ```go
 import (
@@ -58,13 +58,17 @@ import (
 // Auto re-run a function until it succeeds (aka, returns nil error) or ctx.Done channel is closed.
 // If AlsoRetryOnSuccess is true, auto re-run a function until ctx.Done channel is closed.
 guard.WithGuard(ctx, guard.Conf{
-    Tag: "someTag", // Used to tag log messages
-    // The func to be guarded. Fn must be canceled when ctx.Done channel is     closed.
+    // The func to be guarded.
+    // Fn should return ASAP when ctx.Done channel is closed, which usually means an exit signal is sent.
     Fn: func(ctx context.Context) error { ... },
     // Backoff strategy determines how long to wait between retries.
     Bf: backoff.Default(),
     // If true, re-run Fn even if it returns nil error.
     AlsoRetryOnSuccess: false,
+    // Used to tag log messages
+    Tag: "someTag",
+    // A TagLogger used to log messages
+    Log: ...,
 })
 ```
 
@@ -72,12 +76,12 @@ Sample: Start and guard a service until ctx.Done channel is closed.
 
 ```go
 go guard.WithGuard(ctx, guard.Conf{
-    Tag: "someService",
     Fn: func(ctx context.Context) error {
       return serve(ctx)
     },
     Bf: backoff.Default(),
     AlsoRetryOnSuccess: true,
+    Tag: "someService",
 })
 ```
 
@@ -85,17 +89,17 @@ Sample: Retry a task until it succeeds or ctx.Done channel is closed.
 
 ```go
 go guard.WithGuard(ctx, guard.Conf{
-    Tag: "someTask",
     Fn: func(ctx context.Context) error {
       return task(ctx)
     },
     Bf: backoff.Default(),
+    Tag: "someTask",
 })
 ```
 
 ## Auto-Reload on Config Changes
 
-[Auto-Reloader](autoreload/auto_reload.go) starts and re-run a function on config changes.
+Auto-Reloader starts and re-run a function on config changes.
 
 ```go
 import (
@@ -106,32 +110,42 @@ import (
 // Watch a config file, and re-run a func on config changes.
 // Will retry watching if the conf file is removed.
 autoreload.WithAutoReload(ctx, Conf[C]{
-    Tag:     "someTag", // Used to tag log messages
-    Path:    "/some/path", // Path of the config file
-    // Used to load config file on file write event. The returned C is the    loaded config. If C is the same as the last, it's ignored.
-    Load:    func(path string) (C, error),
-    // Process is the func to be reloaded. C is the config loaded by Load.    Process must be canceled when ctx.Done channel is closed.
-    Process: func(context.Context, C),
+    // Path of the config file
+    Path: "/some/path",
+    // Used to load config file on file write event. The returned C is the loaded config.
+    // If C is the same as the last, it's ignored.
+    Load: func(path string) (C, error),
+    // Process is the func to be reloaded. C is the config loaded by Load.
+    // Process should return ASAP when ctx.Done channel is closed.
+    Process: func(ctx context.Context, c C),
     // Backoff strategy determines how long to wait between retries.
-    Bf:      backoff.Default(),
+    Bf: backoff.Default(),
+    // Used to tag log messages
+    Tag: "someTag",
+    // A TagLogger used to log messages
+    Log: ...,
 })
 ```
 
 ## Backoff
 
-[Backoff](backoff/backoff.go) is usually used to determine how long to wait between retries.
+Backoff is usually used to determine how long to wait between retries.
 
 ```go
 import "github.com/burningxflame/gx/reliable/backoff"
 
 // Create a Backoff.
 bf := backoff.New(backoff.Conf{
-    Min        time.Duration // Min delay
-    Max        time.Duration // Max delay
-    Unit       time.Duration // Unit of increment
-    Strategy   Strategy      // Strategy of increment. Linear or Exponent.
+    // Min delay
+    Min: time.Millisecond,
+    // Max delay
+    Max: time.Second * 30,
+    // Unit of increment
+    Unit: time.Second,
+    // Strategy of increment. Linear or Exponent.
+    Strategy: backoff.Exponent,
     // If a retry lasts longer than ResetAfter, the next delay will be reset to Min.
-    ResetAfter time.Duration
+    ResetAfter: time.Second * 30,
 })
 
 // Return the next delay.
@@ -140,13 +154,23 @@ dur := bf.Next()
 
 ## Readiness
 
-[Readiness](readiness/readiness.go) is a TCP server for readiness check (aka, health check). Only for connectivity check. For security purpose, no sending data nor receiving data.
+Readiness is a TCP Server for readiness check (aka, health check). Only for connectivity check. For security purpose, no sending data nor receiving data.
 
 ```go
 import "github.com/burningxflame/gx/reliable/readiness"
 
-// Start a TCP server at the specific address for readiness check.
-readiness.Serve(ctx, "ip:port")
+// Create a TCP Server for readiness check
+srv := &readiness.Server {
+  // The address to listen
+  Addr: "host:port",
+  // Used to tag log messages. Default to "readiness".
+  Tag: "readiness",
+  // A TagLogger used to log messages
+  Log: ...,
+}
+
+// Start the Server
+err := srv.Serve(ctx)
 ```
 
 You may guard it:
@@ -159,12 +183,12 @@ import (
 )
 
 go guard.WithGuard(ctx, guard.Conf{
-    Tag: "readiness",
     Fn: func(ctx context.Context) error {
-      return readiness.Serve(ctx, "ip:port")
+      return srv.Serve(ctx)
     },
     Bf: backoff.Default(),
     AlsoRetryOnSuccess: true,
+    Tag: "readiness",
 })
 ```
 
@@ -188,10 +212,10 @@ func WithTimeout(timeout time.Duration, fn func() error) func() error
 ```
 
 ```go
-import	"github.com/burningxflame/gx/reliable/timeouts"
+import "github.com/burningxflame/gx/reliable/timeouts"
 
 fn = timeouts.WithTimeout(timeout, fn)
 ```
 
 **Samples**
-[timeout_decorator](timeout/timeout_test.go)
+[timeout_decorator](timeouts/timeout_test.go)

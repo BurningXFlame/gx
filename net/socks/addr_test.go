@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -24,25 +24,25 @@ func TestParseAddr(t *testing.T) {
 
 	tcs := []struct {
 		in  string
-		out addr
+		out Addr
 	}{
 		{
 			"192.168.1.81:3618",
-			addr{
+			Addr{
 				host: &ipv4{[4]byte{192, 168, 1, 81}},
 				port: 3618,
 			},
 		},
 		{
 			"[fc00::2:12]:3588",
-			addr{
+			Addr{
 				host: &ipv6{[16]byte{0xfc, 0, 13: 0x02, 15: 0x12}},
 				port: 3588,
 			},
 		},
 		{
 			"3k0nyirdgb5ge.f382g.gr:8768",
-			addr{
+			Addr{
 				host: &domain{"3k0nyirdgb5ge.f382g.gr"},
 				port: 8768,
 			},
@@ -99,12 +99,12 @@ func TestAddrSendRecv(t *testing.T) {
 			err = ad.send(conn, *buf)
 			as.Nil(err)
 
-			var ad2 addr
+			var ad2 Addr
 
 			buf2 := getBuf()
 			defer putBuf(buf2)
 
-			err = (&ad2).recv(conn, *buf2)
+			err = (&ad2).Recv(conn, *buf2)
 			as.Nil(err)
 
 			as.Equal(ad, ad2)
@@ -162,6 +162,6 @@ func (c *fakeConn) Write(b []byte) (n int, err error) {
 func (c *fakeConn) Close() error                       { return nil }
 func (c *fakeConn) LocalAddr() net.Addr                { return nil }
 func (c *fakeConn) RemoteAddr() net.Addr               { return nil }
-func (c *fakeConn) SetDeadline(t time.Time) error      { return nil }
-func (c *fakeConn) SetReadDeadline(t time.Time) error  { return nil }
-func (c *fakeConn) SetWriteDeadline(t time.Time) error { return nil }
+func (c *fakeConn) SetDeadline(_ time.Time) error      { return nil }
+func (c *fakeConn) SetReadDeadline(_ time.Time) error  { return nil }
+func (c *fakeConn) SetWriteDeadline(_ time.Time) error { return nil }

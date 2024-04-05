@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -26,12 +26,16 @@ import (
 type RotateConf = rotate.Conf
 
 type Conf struct {
-	Level log.Level // Log level. Default to LevelError.
+	// Log level. Default to LevelError.
+	Level log.Level
 	// Log format flag. Refer to go std log. Default to LstdFlags | Lmicroseconds | Lmsgprefix.
-	Format        int
-	BufSize       int           // Buffer Size in bytes. Default to 1M.
-	FlushInterval time.Duration // Auto-flush interval. Default to 5s.
-	Rc            RotateConf    // Log-rotating config
+	Format int
+	// Buffer Size in bytes. Default to 1M.
+	BufSize int
+	// Auto-flush interval. Default to 5s.
+	FlushInterval time.Duration
+	// Log-rotating config
+	Rc RotateConf
 }
 
 func (c *Conf) adjust() {

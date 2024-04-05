@@ -9,12 +9,12 @@
   - [Key Design](#key-design)
   - [Use](#use-1)
   - [Benchmark](#benchmark-1)
-- [g2g](#g2g)
+- [G2G](#g2g)
   - [Use](#use-2)
 
 ## Goroutine ID
 
-[GID](gid/gid.go) provides an extremely fast (1.2 ns) method to get the ID of the current goroutine.
+GID provides an extremely fast (1.2 ns) method to get the ID of the current goroutine.
 More precisely speaking, it's the address of the current g (i.e. goroutine). Therefore, the ID makes sense only during the life cycle of the current goroutine.
 
 It's implemented by using Go Assembly.
@@ -46,7 +46,7 @@ BenchmarkGid-12    	903557202	         1.268 ns/op	       0 B/op	       0 allocs
 
 ## Goroutine Local Storage
 
-[GLS](gls/gls.go) provides an extremely fast Goroutine Local Storage.
+GLS provides an extremely fast Goroutine Local Storage.
 
 ### Why
 
@@ -72,7 +72,7 @@ Value Context is immutable because it provides no API to modify itself. If you w
 In conclusion, Value Context is perfect for goroutine local storage.
 3. Use a custom function `Go` instead of the keyword `go` to spawn a goroutine. Therefore we know exactly when a goroutine is created or exits.
 4. See 3.
-5. Use Go AST to create a code generator which scans a codebase and replaces all keyword `go` with function `Go`. See [g2g](#g2g)
+5. Use Go AST to create a code generator which scans a codebase and replaces all keyword `go` with function `Go`. See [G2G](#g2g)
 
 ### Use
 
@@ -112,9 +112,9 @@ BenchmarkGlsCostA-12    	 2271580	       534.1 ns/op	     105 B/op	       5 allo
 BenchmarkGlsCostB-12    	 4524012	       263.5 ns/op	      16 B/op	       1 allocs/op
 ```
 
-## g2g
+## G2G
 
-g2g is a code generator which scans a codebase and replaces all keyword `go` with function `Go`.
+G2G is a code generator which scans a codebase and replaces all keyword `go` with function `Go`.
 It also takes care of the closure problem of for/range.
 It's implemented by using Go AST.
 

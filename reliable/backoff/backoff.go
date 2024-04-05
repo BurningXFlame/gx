@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -11,10 +11,14 @@ package backoff
 import "time"
 
 type Conf struct {
-	Min      time.Duration // Min delay
-	Max      time.Duration // Max delay
-	Unit     time.Duration // Unit of increment
-	Strategy Strategy      // Strategy of increment. Linear or Exponent.
+	// Min delay
+	Min time.Duration
+	// Max delay
+	Max time.Duration
+	// Unit of increment
+	Unit time.Duration
+	// Strategy of increment. Linear or Exponent.
+	Strategy Strategy
 	// If a retry lasts longer than ResetAfter, the next delay will be reset to Min.
 	ResetAfter time.Duration
 }

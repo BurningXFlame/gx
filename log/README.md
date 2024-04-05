@@ -17,11 +17,11 @@
 
 ## Logging Facade
 
-[Log](log/log.go) is a logging facade with leveled logging, tagged logging.
+Log is a logging facade with leveled logging, tagged logging.
 
 ### For Logger Implementers
 
-#### Implement interface [log.Logger](log/log.go)
+#### Implement interface log.Logger
 
 ```go
 // A concrete logger should implement interface Logger.
@@ -74,7 +74,7 @@ func InitTestLog() {
 
 #### Register a Logger
 
-Corresponding to the 2 methods in above section.
+Corresponding to the 2 methods in [above section](#register-self-as-the-global-logger).
 
 **Method 1:**
 
@@ -120,25 +120,26 @@ func main(){
 ```go
 import "github.com/burningxflame/gx/log/log"
 
-// leveled logging
+// Leveled Logging
 log.Error(...)
 log.Warn(...)
 log.Info(...)
 log.Debug(...)
 log.Trace(...)
 
-// tagged logging
-// every log message will be prefixed with the tag, e.g., INFO  [tag1] some info
-tl := log.WithTag("tag1")
+// Tagged Logging.
+// Create a TagLogger, which prints "[tag]" before every log message. e.g. "INFO  [tag] some msg".
+// Usually used for module-specific logging, request-specific logging, etc.
+tl := log.WithTag("tag")
 tl.Error(...)
 tl.Warn(...)
 tl.Info(...)
 tl.Debug(...)
 tl.Trace(...)
 
-// tag chain
-// every log message will be prefixed with tag chain, e.g., INFO  [tag1] [tag2] some info
-tl2 := tl.WithTag("tag2") // equivalent to log.WithTag("tag1").WithTag("tag2")
+// Tag Chain.
+// WithTag may be chained together. e.g. WithTag("tag").WithTag("tag2") creates a TagLogger, which prints "[tag] [tag2]" before every log message.
+tl2 := tl.WithTag("tag2")
 tl2.Error(...)
 tl2.Warn(...)
 tl2.Info(...)
@@ -148,7 +149,8 @@ tl2.Trace(...)
 
 ## Light Logger
 
-[Light](light/light.go) is an all-in-one logger. Light Logger = Go Std Log Wrapper + Concurrent Buffer Writer (with Auto Flusher) + Log Rotator.
+Light is an all-in-one logger.
+Light Logger = Go Std Log Wrapper + Concurrent Buffer Writer (with Auto Flusher) + Log Rotator.
 
 ### Use
 
@@ -158,22 +160,27 @@ tl2.Trace(...)
 import "github.com/burningxflame/gx/log/light"
 
 err := light.Init(light.Conf{
-    Level: log.LevelInfo, // Log level. Default to LevelError.
-    // Log format flag. Refer to go std log. Default to LstdFlags |   Lmicroseconds | Lmsgprefix.
-    Format: ...
-    BufSize: 1<<20, // Buffer Size in bytes. Default to 1M.
-    FlushInterval: time.Second*5, // Auto-flush interval. Default to 5s.
-    Rc: light.RotateConf{ // Log-rotating config
-        FilePath: ..., // Fullpath of log file
-        // Max byte size of a log file. If a file exceeds this size, the file   will be rotated. Default to 10MB.
+    // Log level. Default to LevelError.
+    Level: log.LevelInfo,
+    // Log format flag. Refer to go std log. Default to LstdFlags | Lmicroseconds | Lmsgprefix.
+    Format: ...,
+     // Buffer Size in bytes. Default to 1M.
+    BufSize: 1<<20,
+    // Auto-flush interval. Default to 5s.
+    FlushInterval: time.Second*5,
+    // Log-rotating config
+    Rc: light.RotateConf{
+        // Fullpath of log file
+        FilePath: ...,
+        // Max byte size of a log file. If a file exceeds this size, the file will be rotated. Default to 10MB.
         FileSize: 10<<20,
         // Max number of old log files. Older files will be removed.
         NBak: 2,
         // Permission of log file. Default to 0600.
         Perm: 0600,
-        // If true, rotated log files will not be compressed. Otherwise,   rotated   log files will be compressed with gzip.
+        // If true, rotated log files will not be compressed. Otherwise, rotated log files will be compressed with gzip.
         NoCompress: false,
-        // If ture, rotated log files will be renamed based on UTC time. Local     time otherwise.
+        // If ture, rotated log files will be renamed based on UTC time. Local time otherwise.
         Utc: false,
     },
 })
@@ -191,6 +198,11 @@ err := light.InitTestLog()
 
 ### Performance
 
+| Message Size(B) | Time Cost Per Message (ns) | Converted into Disk IO Speed (MB/s) |
+| --------------- | -------------------------- | ----------------------------------- |
+| 98              | 454.4                      | 206                                 |
+| 354             | 627.6                      | 538                                 |
+
 ```txt
 goos: darwin
 goarch: amd64
@@ -200,27 +212,9 @@ Benchmark/short-12    	 2644009	       454.4 ns/op	      82 B/op	       1 allocs
 Benchmark/long-12     	 1719120	       627.6 ns/op	     357 B/op	       1 allocs/op
 ```
 
-A short log message is like:
-
-```txt
-2023/12/23 20:51:34.523690 INFO  ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-
-```
-
-converted into disk IO speed:
-$ 10^9 / 454.4 * 98 /2^{20} = 206 MB/s $
-
-A long log message is like:
-
-```txt
-2023/12/23 20:51:34.523690 INFO  ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-
-```
-
-converted into disk IO speed:
-$ 10^9 / 627.6 * 354 /2^{20} = 538 MB/s $
-
 ## Concurrent Buffer Writer
 
-[Conbuf](conbuf/buf.go) is a concurrency-safe buffer writer.
+Conbuf is a concurrency-safe buffer writer.
 
 ```go
 import "github.com/burningxflame/gx/log/conbuf"
@@ -242,7 +236,7 @@ BenchmarkNoBuf-12        	  286538	      3540 ns/op	       0 B/op	       0 alloc
 
 ## Auto-Flusher
 
-[AutoFlusher](conbuf/flush.go) wraps a WriteFlusher and return another WriteFlusher which auto flushes the wrapped WriteFlusher at certain intervals.
+Auto-Flusher wraps a WriteFlusher and returns another WriteFlusher which auto flushes the wrapped WriteFlusher at certain intervals.
 AutoFlusher can be useful when you want to check fresh log messages, but the buffer is not full and therefore not flushed yet.
 
 ```go
@@ -260,7 +254,7 @@ fw := conbuf.WithAutoFlush(
 
 ## Log Rotator
 
-[Log Rotator](rotate/rotate.go) provides abilities such as
+Log Rotator provides abilities such as
 
 - rotating log files
 - compressing rotated files
@@ -272,16 +266,17 @@ import "github.com/burningxflame/gx/log/rotate"
 
 // Create a log rotator. The returned wc is a WriteCloser.
 wc, err := rotate.New(rotate.Conf{
-    FilePath: ..., // Fullpath of log file
-    // Max byte size of a log file. If a file exceeds this size, the file will   be rotated. Default to 10MB.
+    // Fullpath of log file
+    FilePath: ...,
+    // Max byte size of a log file. If a file exceeds this size, the file will be rotated. Default to 10MB.
     FileSize: 10<<20,
     // Max number of old log files. Older files will be removed.
     NBak: 2,
     // Permission of log file. Default to 0600.
     Perm: 0600,
-    // If true, rotated log files will not be compressed. Otherwise, rotated   log files will be compressed with gzip.
+    // If true, rotated log files will not be compressed. Otherwise, rotated log files will be compressed with gzip.
     NoCompress: false,
-    // If ture, rotated log files will be renamed based on UTC time. Local time   otherwise.
+    // If ture, rotated log files will be renamed based on UTC time. Local time otherwise.
     Utc: false,
 })
 ...
@@ -297,5 +292,5 @@ wc.Close()
 
 You can
 
-- wrap the logger you preferred and implement the [log.Logger](log/log.go), and then use the [Logging Facade](#logging-facade) for consistent user experience.
+- wrap the logger you preferred, [Implement interface log.Logger](#implement-interface-loglogger), and then [Use Logging Facade](#use-logging-facade) for consistent user experience.
 - enhance the logger you preferred by combining the logger with [Concurrent Buffer Writer](#concurrent-buffer-writer), [Auto-Flusher](#auto-flusher), and/or [Log Rotator](#log-rotator).

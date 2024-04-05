@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -12,7 +12,7 @@ import (
 	"context"
 )
 
-// Semaphore is commonly used for limiting max concurrency, e.g. max concurrent connections.
+// Semaphore is commonly used for limiting max concurrency, e.g. limiting max number of concurrent connections.
 type Sem struct {
 	ch chan struct{}
 }

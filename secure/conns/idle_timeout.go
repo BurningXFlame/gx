@@ -14,6 +14,8 @@ type connIdleTimeout struct {
 	timeout time.Duration
 }
 
+// If no data has been sent from conn by the time the timeout period elapses, conn.Read will return ErrIdleTimeout.
+// Zero timeout means no timeout.
 func WithIdleTimeout(conn net.Conn, timeout time.Duration) (net.Conn, error) {
 	if timeout <= 0 {
 		return conn, nil

@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -21,14 +21,19 @@ import (
 )
 
 type Conf[C comparable] struct {
-	Tag  string // Used to tag log messages
-	Path string // Path of the config file
-	// Used to load config file on file write event. The returned C is the loaded config. If C is the same as the last, it's ignored.
+	// Path of the config file
+	Path string
+	// Used to load config file on file write event. The returned C is the loaded config.
+	// If C is the same as the last, it's ignored.
 	Load func(path string) (C, error)
-	// Process is the func to be reloaded. C is the config loaded by Load. Process must be canceled when ctx.Done channel is closed.
-	Process func(context.Context, C)
+	// Process is the func to be reloaded. C is the config loaded by Load.
+	// Process should return ASAP when ctx.Done channel is closed.
+	Process func(ctx context.Context, c C)
 	// Backoff strategy determines how long to wait between retries.
-	Bf  backoff.Conf
+	Bf backoff.Conf
+	// Used to tag log messages
+	Tag string
+	// A TagLogger used to log messages
 	Log log.TagLogger
 }
 

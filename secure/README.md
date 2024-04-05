@@ -28,7 +28,7 @@ import (
 // Create a Secure TCP Server
 srv := &tcp.Server{
   // The address to listen
-  Addr: "ip:port",
+  Addr: "host:port",
   // Connection handler is where you communicate with a client, i.e. receive/send data from/to a client.
   // Connection handler should return ASAP when ctx.Done channel is closed, which usually means an exit signal is sent.
   ConnHandler: func(ctx context.Context, conn net.Conn) error { ... },

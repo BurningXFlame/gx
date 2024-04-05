@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -17,14 +17,17 @@ import (
 )
 
 type Conf struct {
-	Tag string // Used to tag log messages
-	// The func to be guarded. Fn must be canceled when ctx.Done channel is closed.
+	// The func to be guarded.
+	// Fn should return ASAP when ctx.Done channel is closed, which usually means an exit signal is sent.
 	Fn func(ctx context.Context) error
 	// Backoff strategy determines how long to wait between retries.
 	Bf backoff.Conf
 	// If true, re-run Fn even if it returns nil error.
 	AlsoRetryOnSuccess bool
-	Log                log.TagLogger
+	// Used to tag log messages
+	Tag string
+	// A TagLogger used to log messages
+	Log log.TagLogger
 }
 
 // Auto re-run a function until it succeeds (aka, returns nil error) or ctx.Done channel is closed.
@@ -53,6 +56,10 @@ func WithGuard(ctx context.Context, cf Conf) {
 		err := cf.Fn(ctx)
 		if err == nil && !cf.AlsoRetryOnSuccess {
 			log.Info("completed")
+			return
+		}
+		if err != nil && ctx.Err() != nil {
+			log.Info("received exit signal, exiting")
 			return
 		}
 

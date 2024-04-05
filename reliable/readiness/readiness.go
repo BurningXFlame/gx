@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -16,15 +16,19 @@ import (
 	"github.com/burningxflame/gx/log/log"
 )
 
-type Server struct {
-	Addr string // The address to listen
-	Tag  string // Used to tag log messages. Defaults to "readiness".
-	Log  log.TagLogger
-}
-
-// Start a TCP server for readiness check (aka, health check).
+// TCP Server for readiness check (aka, health check).
 // Only for connectivity check.
 // For security purpose, no sending data nor receiving data.
+type Server struct {
+	// The address to listen
+	Addr string
+	// Used to tag log messages. Default to "readiness".
+	Tag string
+	// A TagLogger used to log messages
+	Log log.TagLogger
+}
+
+// Start the Server.
 func (s *Server) Serve(ctx context.Context) error {
 	if len(s.Tag) == 0 {
 		s.Tag = "readiness"
@@ -44,9 +48,8 @@ func (s *Server) Serve(ctx context.Context) error {
 	log.Info("listening at %v", ln.Addr())
 
 	go func() {
-		defer ln.Close()
-
 		<-ctx.Done()
+		ln.Close()
 		log.Info("received exit signal, exiting")
 	}()
 
@@ -58,11 +61,10 @@ func (s *Server) Serve(ctx context.Context) error {
 		}
 
 		conn, err := ln.Accept()
+		if err != nil && errors.Is(err, net.ErrClosed) { // ln closed, i.e. exiting
+			return nil
+		}
 		if err != nil {
-			if errors.Is(err, net.ErrClosed) { // listener is closed
-				return nil
-			}
-
 			log.Error("error accepting incoming conn: %v", err)
 			continue
 		}

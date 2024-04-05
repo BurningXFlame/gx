@@ -1,6 +1,6 @@
 # License
 
-GX (<https://github.com/BurningXFlame/gx>).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 All original or modified copy of GX, are subject to this License.
@@ -36,5 +36,4 @@ With the purchase of a commercial license:
 
 ### Purchasing a Commercial License
 
-Please contact BurningXFlame ([burningxflame@outlook.com](mailto:burningxflame@outlook.com)) to purchase a commercial license.
-Once purchased, you’ll receive a commercial license PDF and you will be all set to use GX in your commercial products.
+[Pricing and Licensing](https://burningxflame.github.io/gx/doc/intro/#pricing-and-licensing)

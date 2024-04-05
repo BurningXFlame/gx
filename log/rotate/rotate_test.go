@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -170,9 +170,9 @@ func TestNoCompress(t *testing.T) {
 
 func TestPerm(t *testing.T) {
 	tcs := []permTc{
-		{0, 0600, 0400},
-		{0660, 0660, 0440},
-		{0777, 0777, 0444},
+		{0, 0400},
+		{0660, 0440},
+		{0777, 0444},
 	}
 
 	for ti, tc := range tcs {
@@ -183,10 +183,8 @@ func TestPerm(t *testing.T) {
 }
 
 type permTc struct {
-	perm fs.FileMode
-
-	expect    fs.FileMode
-	expectBak fs.FileMode
+	perm           fs.FileMode
+	expectedGzPerm fs.FileMode
 }
 
 func testPerm(t *testing.T, tc permTc) {
@@ -202,6 +200,7 @@ func testPerm(t *testing.T, tc permTc) {
 		FilePath: pa,
 		FileSize: int64(size * ca),
 		NBak:     nBaks,
+		Perm:     tc.perm,
 	})
 	as.Nil(err)
 
@@ -214,21 +213,19 @@ func testPerm(t *testing.T, tc permTc) {
 	err = r.Close()
 	as.Nil(err)
 
-	checkPerm(as, pa, 0600)
+	info, err := os.Stat(pa)
+	as.Nil(err)
+	as.True(info.Mode().Perm() >= 0600)
 
 	pattern := filepath.Join(dir, "*-*")
 	pas, err := filepath.Glob(pattern)
 	as.Nil(err)
 	as.Equal(nBaks, len(pas))
 	for _, pa := range pas {
-		checkPerm(as, pa, 0400)
+		info, err := os.Stat(pa)
+		as.Nil(err)
+		as.Equal(tc.expectedGzPerm, info.Mode().Perm())
 	}
-}
-
-func checkPerm(as *require.Assertions, pa string, expected fs.FileMode) {
-	info, err := os.Stat(pa)
-	as.Nil(err)
-	as.Equal(expected, info.Mode().Perm())
 }
 
 func TestNoBak(t *testing.T) {

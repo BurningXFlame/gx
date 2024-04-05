@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -114,8 +114,6 @@ func (p *Pool) Put(conn net.Conn) {
 	default:
 		_ = conn.Close()
 	}
-
-	return
 }
 
 // Close all connections in the pool

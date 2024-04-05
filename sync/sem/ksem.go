@@ -1,5 +1,5 @@
 /*
-GX (https://github.com/BurningXFlame/gx).
+GX (github.com/burningxflame/gx).
 Copyright © 2022-2024 BurningXFlame. All rights reserved.
 
 Dual-licensed: AGPLv3/Commercial.
@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-// Keyed-Semaphores. Commonly used for limiting max concurrency per key, e.g. max concurrent connections per client.
+// Keyed-Semaphores. Commonly used for limiting max concurrency per key, e.g. limiting max number of concurrent connections per client.
 type KSem[K comparable] struct {
 	ca       int
 	sizeHint int
