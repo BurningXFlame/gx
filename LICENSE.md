@@ -36,4 +36,4 @@ With the purchase of a commercial license:
 
 ### Purchasing a Commercial License
 
-[Pricing and Licensing](https://burningxflame.github.io/gx/doc/intro/#pricing-and-licensing)
+[Pricing and Licensing](https://burningxflame.github.io/gx/doc/pricing/)
