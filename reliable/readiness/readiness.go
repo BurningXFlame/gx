@@ -37,7 +37,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	if s.Log == nil {
 		s.Log = log.WithTag("")
 	}
-	log := s.Log.WithTag(s.Tag)
+	lg := s.Log.WithTag(s.Tag)
 
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
@@ -45,12 +45,12 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 	defer ln.Close()
 
-	log.Info("listening at %v", ln.Addr())
+	lg.Info("listening at %v", ln.Addr())
 
 	go func() {
 		<-ctx.Done()
 		ln.Close()
-		log.Info("received exit signal, exiting")
+		lg.Info("received exit signal, exiting")
 	}()
 
 	for {
@@ -65,7 +65,7 @@ func (s *Server) Serve(ctx context.Context) error {
 			return nil
 		}
 		if err != nil {
-			log.Error("error accepting incoming conn: %v", err)
+			lg.Error("error accepting incoming conn: %v", err)
 			continue
 		}
 

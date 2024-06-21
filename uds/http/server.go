@@ -41,7 +41,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	if s.Log == nil {
 		s.Log = log.WithTag("")
 	}
-	log := s.Log.WithTag(s.Tag)
+	lg := s.Log.WithTag(s.Tag)
 
 	// Clean up in case the process was killed forcibly last time.
 	_ = syscall.Unlink(s.UdsAddr)
@@ -52,12 +52,12 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 	defer ln.Close()
 
-	log.Info("listening at " + s.UdsAddr)
+	lg.Info("listening at " + s.UdsAddr)
 
 	if s.Perm > 0 {
 		err := os.Chmod(s.UdsAddr, s.Perm)
 		if err != nil {
-			log.Warn("error chmoding uds file: %v", err)
+			lg.Warn("error chmoding uds file: %v", err)
 		}
 	}
 
@@ -71,14 +71,14 @@ func (s *Server) Serve(ctx context.Context) error {
 		return err
 
 	case <-ctx.Done():
-		log.Info("received exit signal, exiting")
+		lg.Info("received exit signal, exiting")
 
 		ctx, cancel := context.WithTimeout(ctx, s.ShutdownTimeout)
 		defer cancel()
 
 		err := s.Std.Shutdown(ctx)
 		if err != nil {
-			log.Warn("error shutting down: %v", err)
+			lg.Warn("error shutting down: %v", err)
 		}
 
 		return nil

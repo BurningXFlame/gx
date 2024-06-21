@@ -36,8 +36,8 @@ func WithGuard(ctx context.Context, cf Conf) {
 	if cf.Log == nil {
 		cf.Log = log.WithTag("")
 	}
-	log := cf.Log.WithTag("guard " + cf.Tag)
-	log.Info("starting")
+	lg := cf.Log.WithTag("guard " + cf.Tag)
+	lg.Info("starting")
 
 	bf := backoff.New(cf.Bf)
 
@@ -47,7 +47,7 @@ func WithGuard(ctx context.Context, cf Conf) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info("received exit signal, exiting")
+			lg.Info("received exit signal, exiting")
 			return
 
 		case <-timer.C:
@@ -55,20 +55,20 @@ func WithGuard(ctx context.Context, cf Conf) {
 
 		err := cf.Fn(ctx)
 		if err == nil && !cf.AlsoRetryOnSuccess {
-			log.Info("completed")
+			lg.Info("completed")
 			return
 		}
 		if err != nil && ctx.Err() != nil {
-			log.Info("received exit signal, exiting")
+			lg.Info("received exit signal, exiting")
 			return
 		}
 
 		dur := bf.Next()
 
 		if err != nil {
-			log.Warn("re-run in %v because of error: %v", dur, err)
+			lg.Warn("re-run in %v because of error: %v", dur, err)
 		} else {
-			log.Warn("re-run in %v", dur)
+			lg.Warn("re-run in %v", dur)
 		}
 
 		timer.Reset(dur)

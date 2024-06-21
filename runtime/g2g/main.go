@@ -40,10 +40,10 @@ var (
 )
 
 func walk(pa string, _ fs.DirEntry, err error) error {
-	log := log.WithTag(pa)
+	lg := log.WithTag(pa)
 
 	if err != nil {
-		log.Warn("skipped because of err: %v", err)
+		lg.Warn("skipped because of err: %v", err)
 		return fs.SkipDir
 	}
 
@@ -56,7 +56,7 @@ func walk(pa string, _ fs.DirEntry, err error) error {
 	scanned++
 	if err != nil {
 		failed++
-		log.Warn("error processing: %v", err)
+		lg.Warn("error processing: %v", err)
 		return nil
 	}
 
@@ -64,7 +64,7 @@ func walk(pa string, _ fs.DirEntry, err error) error {
 		replaced++
 	}
 
-	log.Info("processed")
+	lg.Info("processed")
 	return nil
 }
 

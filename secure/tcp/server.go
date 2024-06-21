@@ -56,7 +56,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	if s.Log == nil {
 		s.Log = log.WithTag("")
 	}
-	log := s.Log.WithTag(s.Tag)
+	lg := s.Log.WithTag(s.Tag)
 
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
@@ -64,12 +64,12 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 	defer ln.Close()
 
-	log.Info("listening at %v", ln.Addr())
+	lg.Info("listening at %v", ln.Addr())
 
 	go func() {
 		<-ctx.Done()
 		ln.Close()
-		log.Info("received exit signal, exiting")
+		lg.Info("received exit signal, exiting")
 	}()
 
 	for {
@@ -78,11 +78,11 @@ func (s *Server) Serve(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			log.Error("error accepting incoming conn: %v", err)
+			lg.Error("error accepting incoming conn: %v", err)
 			continue
 		}
 
-		s.handleConn(ctx, conn, log)
+		s.handleConn(ctx, conn, lg)
 	}
 
 	return timeouts.WithTimeout(s.ShutdownTimeout, func() error {
@@ -91,10 +91,10 @@ func (s *Server) Serve(ctx context.Context) error {
 	})()
 }
 
-func (s *Server) handleConn(ctx context.Context, conn net.Conn, log log.TagLogger) {
+func (s *Server) handleConn(ctx context.Context, conn net.Conn, lg log.TagLogger) {
 	id := connId()
-	log = log.WithTag(id)
-	log.Info("incoming conn [%v]", conn.RemoteAddr())
+	lg = lg.WithTag(id)
+	lg.Info("incoming conn [%v]", conn.RemoteAddr())
 
 	if s.ConnLimiter != nil {
 		err := s.ConnLimiter.Acquire(ctx)
@@ -117,7 +117,7 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn, log log.TagLogge
 		if s.IdleTimeout > 0 {
 			c, err := conns.WithIdleTimeout(conn, s.IdleTimeout)
 			if err != nil {
-				log.Error("error enabling idle timeout: %v", err)
+				lg.Error("error enabling idle timeout: %v", err)
 			} else {
 				conn = c
 			}
@@ -126,7 +126,7 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn, log log.TagLogge
 		if s.TlsConfig != nil {
 			_ctx, _conn, err := s.tlsHandshake(ctx, conn)
 			if err != nil {
-				log.Error("error TLS handshake: %v", err)
+				lg.Error("error TLS handshake: %v", err)
 				return
 			}
 
@@ -140,14 +140,14 @@ func (s *Server) handleConn(ctx context.Context, conn net.Conn, log log.TagLogge
 
 		err := s.ConnHandler(ctx, conn)
 		if err != nil && errors.Is(err, conns.ErrIdleTimeout) {
-			log.Warn("%v", err)
+			lg.Warn("%v", err)
 			return
 		}
 		if err != nil {
-			log.Error("%v", err)
+			lg.Error("%v", err)
 			return
 		}
-		log.Info("done processing")
+		lg.Info("done processing")
 	}()
 }
 

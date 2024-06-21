@@ -43,8 +43,8 @@ func WithAutoReload[C comparable](ctx context.Context, cf Conf[C]) {
 	if cf.Log == nil {
 		cf.Log = log.WithTag("")
 	}
-	log := cf.Log.WithTag("autoReload " + cf.Tag)
-	log.Info("starting")
+	lg := cf.Log.WithTag("autoReload " + cf.Tag)
+	lg.Info("starting")
 
 	ch := make(chan C, 1)
 	done := make(chan struct{})
@@ -55,14 +55,14 @@ func WithAutoReload[C comparable](ctx context.Context, cf Conf[C]) {
 		guard.WithGuard(ctx, guard.Conf{
 			Tag: "watch " + cf.Tag,
 			Fn: func(ctx context.Context) error {
-				return watch(ctx, cf.Path, cf.Load, ch, log)
+				return watch(ctx, cf.Path, cf.Load, ch, lg)
 			},
 			Bf:                 cf.Bf,
 			AlsoRetryOnSuccess: true,
 		})
 	}()
 
-	reload(ctx, cf.Process, ch, log)
+	reload(ctx, cf.Process, ch, lg)
 
 	<-done
 }
@@ -72,7 +72,7 @@ func watch[C comparable](
 	path string,
 	load func(string) (C, error),
 	ch chan<- C,
-	log log.TagLogger,
+	lg log.TagLogger,
 ) error {
 	val, err := load(path)
 	if err != nil {
@@ -84,7 +84,7 @@ func watch[C comparable](
 	_load := func(path string) {
 		val, err := load(path)
 		if err != nil {
-			log.Error("error loading conf: %v", err)
+			lg.Error("error loading conf: %v", err)
 			return
 		}
 
@@ -134,7 +134,7 @@ func reload[C comparable](
 	ctx context.Context,
 	fn func(context.Context, C),
 	ch <-chan C,
-	log log.TagLogger,
+	lg log.TagLogger,
 ) {
 	var val C
 	var ctxFn context.Context
@@ -144,20 +144,20 @@ func reload[C comparable](
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info("received exit signal, exiting")
+			lg.Info("received exit signal, exiting")
 			cancelFn()
 			wgFn.Wait()
 			return
 
 		case v := <-ch:
 			if v == val {
-				log.Info("ignore because of no change")
+				lg.Info("ignore because of no change")
 				continue
 			}
 
 			val = v
 
-			log.Info("reloading on change")
+			lg.Info("reloading on change")
 
 			cancelFn()
 			wgFn.Wait()
