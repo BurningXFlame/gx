@@ -22,6 +22,9 @@ srv := &uh.Server{
   UdsAddr: "/some/path",
   // File permission of the UdsAddr
   Perm: 0600,
+  // Used to limit max number of concurrent requests.
+  // Default to no limit.
+  Limiter: sem.New(n),
   // If graceful shutdown takes longer than ShutdownTimeout, exit instantly.
   ShutdownTimeout: time.Second*3,
   // Used to tag log messages

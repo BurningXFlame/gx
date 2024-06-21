@@ -2,18 +2,9 @@
 
 Provides utilities to improve application security.
 
-- [Idle Timeout](#idle-timeout)
 - [Secure TCP Server](#secure-tcp-server)
-
-## Idle Timeout
-
-```go
-import "github.com/burningxflame/gx/secure/conns"
-
-// If no data has been sent from conn by the time the timeout period elapses, conn.Read will return ErrIdleTimeout.
-// Zero timeout means no timeout.
-conn, err := conns.WithIdleTimeout(conn, timeout)
-```
+- [Secure HTTP Server](#secure-http-server)
+- [Idle Timeout](#idle-timeout)
 
 ## Secure TCP Server
 
@@ -78,4 +69,47 @@ func handleConn(ctx context.Context, conn net.Conn) error {
   connId, ok := tcp.GetConnId(ctx)
   ...
 }
+```
+
+## Secure HTTP Server
+
+The Secure HTTP Server has builtin abilities to defend against DDoS attacks.
+
+```go
+import (
+  "net/http"
+  sh "github.com/burningxflame/gx/secure/http"
+  "github.com/burningxflame/gx/sync/sem"
+)
+
+// Create a Secure HTTP Server
+srv := &sh.Server{
+  // http.Server in std lib
+  Std: http.Server{
+    Handler: someHandler,
+    ...
+  },
+  // Used to limit max number of concurrent requests.
+  // Default to no limit.
+  Limiter: sem.New(n),
+  // If graceful shutdown takes longer than ShutdownTimeout, exit instantly.
+  ShutdownTimeout: time.Second*3,
+  // Used to tag log messages
+  Tag: "someTag",
+  // A TagLogger used to log messages
+  Log: ...,
+}
+
+// Start the Server
+err := s.Serve(ctx)
+```
+
+## Idle Timeout
+
+```go
+import "github.com/burningxflame/gx/secure/conns"
+
+// If no data has been sent from conn by the time the timeout period elapses, conn.Read will return ErrIdleTimeout.
+// Zero timeout means no timeout.
+conn, err := conns.WithIdleTimeout(conn, timeout)
 ```

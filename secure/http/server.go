@@ -10,26 +10,17 @@ package http
 
 import (
 	"context"
-	"io/fs"
-	"net"
 	"net/http"
-	"os"
-	"syscall"
 	"time"
 
 	"github.com/burningxflame/gx/log/log"
-	sh "github.com/burningxflame/gx/secure/http"
 	"github.com/burningxflame/gx/sync/sem"
 )
 
-// HTTP Server over UDS
+// Secure HTTP Server
 type Server struct {
 	// http.Server in std lib
 	Std http.Server
-	// The UDS address to listen
-	UdsAddr string
-	// File permission of the UdsAddr
-	Perm fs.FileMode
 	// Used to limit max number of concurrent requests.
 	// Default to no limit.
 	Limiter *sem.Sem
@@ -48,36 +39,20 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 	lg := s.Log.WithTag(s.Tag)
 
-	// Clean up in case the process was killed forcibly last time.
-	_ = syscall.Unlink(s.UdsAddr)
-
-	ln, err := net.Listen("unix", s.UdsAddr)
-	if err != nil {
-		return err
-	}
-	defer ln.Close()
-
-	lg.Info("listening at " + s.UdsAddr)
-
-	if s.Perm > 0 {
-		err := os.Chmod(s.UdsAddr, s.Perm)
-		if err != nil {
-			lg.Warn("error chmoding uds file: %v", err)
-		}
-	}
-
 	if s.Limiter != nil {
 		origHandler := s.Std.Handler
 		defer func() {
 			s.Std.Handler = origHandler
 		}()
 
-		s.Std.Handler = sh.LimitHandler(ctx, s.Limiter, origHandler)
+		s.Std.Handler = LimitHandler(ctx, s.Limiter, origHandler)
 	}
+
+	lg.Info("listening at %v", s.Std.Addr)
 
 	chServe := make(chan error, 1)
 	go func() {
-		chServe <- s.Std.Serve(ln)
+		chServe <- s.Std.ListenAndServeTLS("", "")
 	}()
 
 	select {
@@ -97,4 +72,20 @@ func (s *Server) Serve(ctx context.Context) error {
 
 		return nil
 	}
+}
+
+func LimitHandler(ctx context.Context, limiter *sem.Sem, handler http.Handler) http.Handler {
+	if limiter == nil {
+		return handler
+	}
+
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		err := limiter.Acquire(ctx)
+		if err != nil { // ctx.Done channel closed, i.e. exiting
+			return
+		}
+		defer limiter.Release()
+
+		handler.ServeHTTP(rw, r)
+	})
 }
