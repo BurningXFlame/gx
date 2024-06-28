@@ -9,7 +9,6 @@ Read the LICENSE file for details.
 package connpool
 
 import (
-	"bytes"
 	"errors"
 	"net"
 	"strconv"
@@ -17,6 +16,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/burningxflame/gx/net/fakeconn"
 )
 
 func TestNew(t *testing.T) {
@@ -103,11 +104,11 @@ func TestPut(t *testing.T) {
 
 			time.Sleep(time.Second / 10)
 
-			conn := &fakeConn{}
+			conn, _ := newFakeConn()
 			p.Put(conn)
 			as.Equal(tc.len, len(p.ch))
 			if tc.drop {
-				as.True(conn.closed)
+				as.True(conn.(*fakeConn).closed)
 			}
 
 			p.Put(nil)
@@ -124,12 +125,12 @@ func TestClose(t *testing.T) {
 
 	time.Sleep(time.Second / 10)
 
-	conn := &fakeConn{}
+	conn, _ := newFakeConn()
 	p.Put(conn)
 
 	p.Close()
 	as.Equal(0, len(p.ch))
-	as.True(conn.closed)
+	as.True(conn.(*fakeConn).closed)
 }
 
 func TestNewTimeout(t *testing.T) {
@@ -188,32 +189,20 @@ func TestPingTimeout(t *testing.T) {
 }
 
 func newFakeConn() (net.Conn, error) {
-	return &fakeConn{}, nil
+	return &fakeConn{
+		Conn: fakeconn.New(),
+	}, nil
 }
 
 type fakeConn struct {
-	b      bytes.Buffer
+	net.Conn
 	closed bool
-}
-
-func (c *fakeConn) Read(b []byte) (n int, err error) {
-	return c.b.Read(b)
-}
-
-func (c *fakeConn) Write(b []byte) (n int, err error) {
-	return c.b.Write(b)
 }
 
 func (c *fakeConn) Close() error {
 	c.closed = true
-	return nil
+	return c.Conn.Close()
 }
-
-func (c *fakeConn) LocalAddr() net.Addr                { return nil }
-func (c *fakeConn) RemoteAddr() net.Addr               { return nil }
-func (c *fakeConn) SetDeadline(_ time.Time) error      { return nil }
-func (c *fakeConn) SetReadDeadline(_ time.Time) error  { return nil }
-func (c *fakeConn) SetWriteDeadline(_ time.Time) error { return nil }
 
 func pingOk(net.Conn) error {
 	return nil
@@ -244,7 +233,7 @@ func pingHalfErr() func(net.Conn) error {
 func newConnTimeout(timeout time.Duration) func() (net.Conn, error) {
 	return func() (net.Conn, error) {
 		time.Sleep(timeout)
-		return &fakeConn{}, nil
+		return newFakeConn()
 	}
 }
 
@@ -254,12 +243,12 @@ func newConnHalfTimeout(timeout time.Duration) func() (net.Conn, error) {
 	return func() (net.Conn, error) {
 		if ok {
 			ok = !ok
-			return &fakeConn{}, nil
+			return newFakeConn()
 		}
 
 		ok = !ok
 		time.Sleep(timeout)
-		return &fakeConn{}, nil
+		return newFakeConn()
 	}
 }
 

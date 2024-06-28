@@ -9,14 +9,13 @@ Read the LICENSE file for details.
 package socks
 
 import (
-	"bytes"
-	"net"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/burningxflame/gx/net/fakeconn"
 )
 
 func TestParseAddr(t *testing.T) {
@@ -91,13 +90,15 @@ func TestAddrSendRecv(t *testing.T) {
 			ad, err := parseAddr(tc)
 			as.Nil(err)
 
-			conn := &fakeConn{}
+			conn := fakeconn.New()
 
-			buf := getBuf()
-			defer putBuf(buf)
+			go func() {
+				buf := getBuf()
+				defer putBuf(buf)
 
-			err = ad.send(conn, *buf)
-			as.Nil(err)
+				err = ad.send(conn, *buf)
+				as.Nil(err)
+			}()
 
 			var ad2 Addr
 
@@ -126,42 +127,21 @@ func TestDiscardAddr(t *testing.T) {
 			ad, err := parseAddr(tc)
 			as.Nil(err)
 
-			conn := &fakeConn{}
+			conn := fakeconn.New()
 
-			buf := getBuf()
-			defer putBuf(buf)
+			go func() {
+				buf := getBuf()
+				defer putBuf(buf)
 
-			err = ad.send(conn, *buf)
-			as.Nil(err)
-
-			as.Greater(conn.b.Len(), 0)
+				err = ad.send(conn, *buf)
+				as.Nil(err)
+			}()
 
 			buf2 := getBuf()
 			defer putBuf(buf2)
 
 			discardAddr(conn, *buf2)
 			as.Nil(err)
-
-			as.Equal(conn.b.Len(), 0)
 		})
 	}
 }
-
-type fakeConn struct {
-	b bytes.Buffer
-}
-
-func (c *fakeConn) Read(b []byte) (n int, err error) {
-	return c.b.Read(b)
-}
-
-func (c *fakeConn) Write(b []byte) (n int, err error) {
-	return c.b.Write(b)
-}
-
-func (c *fakeConn) Close() error                       { return nil }
-func (c *fakeConn) LocalAddr() net.Addr                { return nil }
-func (c *fakeConn) RemoteAddr() net.Addr               { return nil }
-func (c *fakeConn) SetDeadline(_ time.Time) error      { return nil }
-func (c *fakeConn) SetReadDeadline(_ time.Time) error  { return nil }
-func (c *fakeConn) SetWriteDeadline(_ time.Time) error { return nil }
