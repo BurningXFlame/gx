@@ -12,6 +12,7 @@ package log
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"sync/atomic"
 )
 
@@ -34,28 +35,12 @@ const (
 	LevelTrace
 )
 
-type conf struct {
-	logger Logger
-	level  Level
-}
-
-var (
-	conf0   = conf{}
-	theConf atomic.Value
-)
-
-func init() {
-	theConf.Store(conf0)
-}
-
-var (
-	errNilLogger    = errors.New("nil logger")
-	errInvalidLevel = errors.New("invalid level")
-)
-
 // Register logger as the global logger.
 // Can be called multiple times. In this case, the old logger will be closed, before the new one takes effect.
 func Set(logger Logger, level Level) error {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if logger == nil {
 		return errNilLogger
 	}
@@ -73,6 +58,26 @@ func Set(logger Logger, level Level) error {
 
 	return nil
 }
+
+type conf struct {
+	logger Logger
+	level  Level
+}
+
+var (
+	conf0   = conf{}
+	theConf atomic.Value
+	mu      sync.Mutex
+)
+
+func init() {
+	theConf.Store(conf0)
+}
+
+var (
+	errNilLogger    = errors.New("nil logger")
+	errInvalidLevel = errors.New("invalid level")
+)
 
 func Error(format string, v ...any) {
 	printf(LevelError, format, v...)
